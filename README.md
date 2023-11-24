@@ -1,4 +1,56 @@
-# 🍓 Fruit Market Land
+# Claim funds from contract verifying user using Zupass
+
+🧪 Based on the Devconnect Zupass: SE2 Starter Kit https://github.com/BuidlGuidl/devconnect-zupass-se2
+
+## Smart Contracts
+
+Validate Zupass ticket on a smart contract.
+
+Created a ZupassVerifier contract https://github.com/damianmarti/fruit-market-land/blob/zupass-claim/packages/hardhat/contracts/ZupassVerifier.sol
+
+And then the ZupassDispenser is ZupassVerifier https://github.com/damianmarti/fruit-market-land/blob/zupass-claim/packages/hardhat/contracts/ZupassDispenser.sol
+
+ZupassDispenser getFunds method checks for valid ticket and event, and send funds to user:
+
+```
+  function getFunds(
+    ProofArgs calldata proof
+  )
+    public
+    verifiedProof(proof)
+    validEventIds(proof._pubSignals)
+    validSigner(proof._pubSignals)
+    notSent(proof._pubSignals)
+  {
+    sent[proof._pubSignals[5]] = true;
+
+    (bool daiTransferred, ) = payable(msg.sender).call{value: DAI_FAUCET_AMOUNT}("");
+    require(daiTransferred, "Dai transfer failed");
+
+    bool creditTokenTransferred = creditToken.transfer(msg.sender, SALT_FAUCET_AMOUNT);
+    require(creditTokenTransferred, "Credit token transfer failed");
+  }
+``` 
+
+```sent``` flag use the *attendeeSemaphoreId* to avoid sending more than one time to each user.
+
+```
+  modifier notSent(uint256[38] memory _pubSignals) {
+    require(!sent[_pubSignals[5]], "Already sent");
+    _;
+  }
+```
+
+## Frontend
+
+Get Zupass proof https://github.com/damianmarti/fruit-market-land/blob/zupass-claim/packages/nextjs/components/screens/Main.tsx#L63
+
+Call ZupassDispenser contract with proof https://github.com/damianmarti/fruit-market-land/blob/zupass-claim/packages/nextjs/components/screens/Main.tsx#L253
+
+More information at [Devconnect Zupass: SE2 Starter Kit](https://github.com/BuidlGuidl/devconnect-zupass-se2)
+
+
+## 🍓 Fruit Market Land
 
 🧪 this is forked from the fruit market repo [here](https://github.com/BuidlGuidl/fruit-market)
 
